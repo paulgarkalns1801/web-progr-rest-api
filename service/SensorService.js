@@ -1,10 +1,12 @@
 'use strict';
 
+const mongoose = require('mongoose');
 const result = require("js-yaml");
 const MongoClient = require('mongodb').MongoClient;
-let url = "mongodb://localhost:27017/";
+const SensorValueInput = require('../models/SensorValueInput');
+let url = "mongodb://mongo:27017/";
 
-const uri = "mongodb://localhost:27017/";
+const uri = "mongodb://mongo:27017/";
 const client = new MongoClient(uri);
 
 
@@ -79,8 +81,8 @@ exports.getSensorValuesInRange = function (id, dateTime) {
  **/
 exports.getSensors = function () {
     return new Promise(async function (resolve, reject) {
-       // let docs =  await findOne().catch(console.dir);
-        let docs =  await findMany().catch(console.dir);
+        // let docs =  await findOne().catch(console.dir);
+        let docs = await findMany().catch(console.dir);
         // let docArr = docs.toArray();
         // await docs.forEach(doc => docArr.push(doc));
         var examples = {};
@@ -104,16 +106,17 @@ exports.getSensors = function () {
 exports.sensorsPOST = function (body) {
     console.log(body.dateTime)
 
-    MongoClient.connect(url, function (err, db) {
+    const newSensorValue = new SensorValueInput({
+        value: body.value,
+        sensorId: body.sensorId,
+        dateTime: new Date(body.dateTime)
+    })
+
+    MongoClient.connect(url, { useUnifiedTopology: true }, function (err, db) {
         if (err) throw err;
         let dbo = db.db("roomsAndSensors");
-        dbo.collection("sensorValueEntries").insertOne(
-            {
-                value: body.value,
-                sensorId: body.sensorId,
-                dateTime: new Date(body.dateTime)
-            }
-            , function (err, res) {
+        dbo.collection("sensorValueEntries").insertOne(newSensorValue,
+            function (err, res) {
                 if (err) throw err;
                 console.log("1 document inserted");
                 db.close();
@@ -154,12 +157,12 @@ async function findOne() {
         const database = client.db("roomsAndSensors");
         const movies = database.collection("roomsAndSensors");
         // Query for a movie that has the title 'The Room'
-        const query = { roomName: "POIC_1" };
+        const query = {roomName: "POIC_1"};
         const options = {
             // sort matched documents in descending order by rating
-            sort: { _id: -1 },
+            sort: {_id: -1},
             // Include only the `title` and `imdb` fields in the returned document
-            projection: { _id: 1, roomName: 1, sensors: 1 },
+            projection: {_id: 1, roomName: 1, sensors: 1},
         };
         docs = await movies.findOne(query, options);
         // since this method returns the matched document, not a cursor, print it directly
@@ -181,9 +184,9 @@ async function findMany() {
         const query = {};
         const options = {
             // sort returned documents in ascending order by title (A->Z)
-            sort: { _id: -1 },
+            sort: {_id: -1},
             // Include only the `title` and `imdb` fields in each returned document
-            projection: {_id: 1, roomName: 1, sensors: 1 },
+            projection: {_id: 1, roomName: 1, sensors: 1},
         };
         docs = await movies.find(query, options);
         docsArr = await docs.toArray()

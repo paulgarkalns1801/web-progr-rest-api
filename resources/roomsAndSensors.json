@@ -1,0 +1,87 @@
+[
+  {
+    "roomName" : "POIC_1",
+    "sensors" : [
+      {
+        "sensorType" : "carbonDioxideSensor",
+        "sensorId" : "100"
+      },
+      {
+        "sensorType" : "temperatureSensor",
+        "sensorId" : "105"
+      },
+      {
+        "sensorType" : "humiditySensor",
+        "sensorId" : "1010"
+      }
+    ]
+  },
+  {
+    "roomName" : "POIC_2",
+    "sensors" : [
+      {
+        "sensorType" : "carbonDioxideSensor",
+        "sensorId" : "200"
+      },
+      {
+        "sensorType" : "temperatureSensor",
+        "sensorId" : "205"
+      },
+      {
+        "sensorType" : "humiditySensor",
+        "sensorId" : "2010"
+      }
+    ]
+  },
+  {
+    "roomName" : "POIC_3",
+    "sensors" : [
+      {
+        "sensorType" : "carbonDioxideSensor",
+        "sensorId" : "300"
+      },
+      {
+        "sensorType" : "temperatureSensor",
+        "sensorId" : "305"
+      },
+      {
+        "sensorType" : "humiditySensor",
+        "sensorId" : "3010"
+      }
+    ]
+  },
+  {
+    "roomName" : "POIC_4",
+    "sensors" : [
+      {
+        "sensorType" : "carbonDioxideSensor",
+        "sensorId" : "400"
+      },
+      {
+        "sensorType" : "temperatureSensor",
+        "sensorId" : "405"
+      },
+      {
+        "sensorType" : "humiditySensor",
+        "sensorId" : "4010"
+      }
+    ]
+  },
+  {
+    "roomName" : "POIC_5",
+    "sensors" : [
+      {
+        "sensorType" : "carbonDioxideSensor",
+        "sensorId" : "500"
+      },
+      {
+        "sensorType" : "temperatureSensor",
+        "sensorId" : "505"
+      },
+      {
+        "sensorType" : "humiditySensor",
+        "sensorId" : "5010"
+      }
+    ]
+  }
+]
