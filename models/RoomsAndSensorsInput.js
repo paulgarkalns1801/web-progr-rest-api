@@ -6,6 +6,9 @@ const RoomsAndSensorsInputSchema = new Schema({
         type: String,
         required: true
     },
+    // roomId: {
+    //     type: String,
+    // },
     sensors: [{
         sensorType: String,
         sensorId: String

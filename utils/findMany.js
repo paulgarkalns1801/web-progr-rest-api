@@ -1,7 +1,7 @@
 const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb://mongo:27017/";
+const config = require('../config/config.js');
+const uri = config.database_link;
 const client = new MongoClient(uri);
-
 
 module.exports = async function findMany(database, collection) {
     let docs

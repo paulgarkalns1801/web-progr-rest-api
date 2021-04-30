@@ -4,9 +4,9 @@ const mongoose = require('mongoose');
 const result = require("js-yaml");
 const MongoClient = require('mongodb').MongoClient;
 const SensorValueInput = require('../models/SensorValueInput');
-let url = "mongodb://mongo:27017/";
-
-const uri = "mongodb://mongo:27017/";
+const config = require('../config/config.js');
+let url = config.database_link;
+const uri = config.database_link;
 const client = new MongoClient(uri);
 
 
@@ -158,7 +158,6 @@ exports.getSensorValues = function (req) {
         }
 
 
-
         // let docs =  await findOne().catch(console.dir);
 
         // let docArr = docs.toArray();
@@ -229,17 +228,143 @@ exports.sensorsPOST = function (body) {
  * returns SensorInfo
  **/
 exports.sensorsPUT = function (body) {
+    return new Promise(async function (resolve, reject) {
+        let doc
+        let query = {}
+        let options = {}
+        let examples = {};
+        let exists = false
+        let update = {}
+        const RoomsAndSensorsInput = require('../models/RoomsAndSensorsInput.js');
+        const Sensor = require('../models/Sensor.js');
+        if (body.roomId === undefined) {
+            if (body.roomName !== undefined) {
+                query = {roomName: body.roomName}
+                doc = await findOne("roomsAndSensors", query, options)
+                if (doc !== null) {
+                    exists = true
+                    examples['application/json'] = {"err": "Room already exists"}
+                    resolve(examples[Object.keys(examples)[0]])
+                }
 
-    return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "sensorType": "temperatureSensor",
-            "id": "d290f1ee-6c54-4b01-090e-d701748f0851"
-        };
+                for (let sensor of body.sensors) {
+                    let a = ""
+                    query = {"sensors.sensorId": sensor.sensorId}
+                    doc = await findOne("roomsAndSensors", query, options)
+                    if (doc !== null) {
+                        exists = true
+                        examples['application/json'] = {"err": "Sensor " + sensor.sensorId + " already exists"}
+                        resolve(examples[Object.keys(examples)[0]])
+                    }
+                }
+                if (!exists) {
+                    let newRoomAndSensorValue = new RoomsAndSensorsInput({
+                        roomName: body.roomName,
+                        sensors: body.sensors
+                    })
+                    doc = await insertOne("roomsAndSensors", newRoomAndSensorValue)
+                    examples['application/json'] = {"data": doc}
+                }
+            }
+        }
+        if (body.roomId !== undefined) {
+            let roomIdMongoObj = new mongo.ObjectID(body.roomId);
+            query = {_id: roomIdMongoObj}
+            doc = await findOne("roomsAndSensors", query, options)
+            if (doc === null) {
+                examples['application/json'] = {"err": "Room not found"}
+                resolve(examples[Object.keys(examples)[0]])
+            }
+            if (doc !== null) {
+                let newRoomAndSensorValue = new RoomsAndSensorsInput({
+                    roomName: body.roomName,
+                    sensors: body.sensors
+                })
+                let sensorArr = []
+                // let newSensor = new Sensor
+
+                for (let sensor of body.sensors) {
+                    let newSensor = new Sensor({
+                        sensorType: sensor.sensorType,
+                        sensorId: sensor.sensorId
+                    })
+                    sensorArr = sensorArr.concat(newSensor)
+                }
+
+                query = {_id: roomIdMongoObj}
+                update = {
+                    $set: {
+                        roomName: body.roomName,
+                        sensors: sensorArr
+                    }
+                }
+                doc = await updateOne("roomsAndSensors", query, update)
+                examples['application/json'] = {"data": doc}
+            }
+        }
         if (Object.keys(examples).length > 0) {
             resolve(examples[Object.keys(examples)[0]]);
         } else {
+            examples['application/json'] = {"err": "Check request data"}
             resolve();
+        }
+    });
+}
+
+exports.sensorsDelete = async function (body) {
+    return new Promise(async function (resolve, reject) {
+        let query = {}
+        let update = {}
+        let doc
+        let examples = {};
+        let exists = false
+        let rid = body.roomId
+        let sid = body.sensorId
+        if (body.roomId !== undefined && body.sensorId !== undefined) {
+            let roomIdMongoObj = new mongo.ObjectID(body.roomId);
+            query = {_id: roomIdMongoObj}
+            doc = await findOne("roomsAndSensors", query, {})
+            if (doc !== null) {
+                for (let sensor of doc.sensors) {
+                    let sensorMongoIdStr = sensor._id.toString()
+                    if (sensorMongoIdStr === body.sensorId) {
+                        exists = true
+                    }
+                }
+                if (exists) {
+                    let sensorIdMongoObj = new mongo.ObjectID(body.sensorId);
+                    update = {
+                        $pull: {
+                            sensors: {_id: sensorIdMongoObj}
+                        }
+                    }
+                    doc = await updateOne("roomsAndSensors", query, update)
+                    examples['application/json'] = doc
+                } else {
+                    examples['application/json'] = {"err": "No such sensor in room"}
+                    resolve(examples[Object.keys(examples)[0]]);
+                }
+            } else{
+                examples['application/json'] = {"err": "No such room"}
+            }
+
+        }
+        if (body.roomId !== undefined && body.sensorId === undefined) {
+            let roomIdMongoObj = new mongo.ObjectID(body.roomId);
+            query = {_id: roomIdMongoObj}
+            doc = await findOne("roomsAndSensors", query, {})
+            if (doc !== null) {
+                doc = await deleteOne("roomsAndSensors", query)
+                examples['application/json'] = doc
+            } else {
+                examples['application/json'] = {"err": "No such room"}
+            }
+        }
+        if (Object.keys(examples).length > 0) {
+            resolve(examples[Object.keys(examples)[0]]);
+        } else {
+            examples['application/json'] = {"err": "Check request data"}
+            resolve(examples[Object.keys(examples)[0]]);
         }
     });
 }
@@ -271,6 +396,79 @@ async function findOne(coll, q, opts) {
     return docs
 }
 
+async function insertOne(coll, q) {
+    let docs
+    try {
+        await client.connect();
+        const database = client.db("roomsAndSensors");
+        const collection = database.collection(coll);
+
+        const query = q;
+        const options = {
+            // sort returned documents in ascending order by title (A->Z)
+            sort: {_id: -1},
+            // Include only the `title` and `imdb` fields in each returned document
+            projection: {_id: 1, roomName: 1, sensors: 1},
+        };
+
+        // Query for a movie that has the title 'The Room'
+        docs = await collection.insertOne(query);
+        // since this method returns the matched document, not a cursor, print it directly
+        console.log(docs);
+        // await client.close();
+    } finally {
+
+    }
+    return docs
+}
+
+async function deleteOne(coll, q) {
+    let docs
+    try {
+        await client.connect();
+        const database = client.db("roomsAndSensors");
+        const collection = database.collection(coll);
+
+        const query = q;
+        const options = {
+            // sort returned documents in ascending order by title (A->Z)
+            sort: {_id: -1},
+            // Include only the `title` and `imdb` fields in each returned document
+            projection: {_id: 1, roomName: 1, sensors: 1},
+        };
+
+        // Query for a movie that has the title 'The Room'
+        docs = await collection.deleteOne(query);
+        // since this method returns the matched document, not a cursor, print it directly
+        console.log(docs);
+        // await client.close();
+    } finally {
+
+    }
+    return docs
+}
+
+async function updateOne(coll, q, upd) {
+    let docs
+    try {
+        await client.connect();
+        const database = client.db("roomsAndSensors");
+        const collection = database.collection(coll);
+
+        const query = q;
+        const update = upd;
+        const options = {
+            sort: {_id: -1},
+            projection: {_id: 1, roomName: 1, sensors: 1},
+        };
+        docs = await collection.updateOne(query, update);
+        console.log(docs);
+    } finally {
+
+    }
+    return docs
+}
+
 async function findMany(query, options, collName) {
     let docs
     let docsArr = []
@@ -278,25 +476,13 @@ async function findMany(query, options, collName) {
         await client.connect();
         const database = client.db("roomsAndSensors");
         const collection = database.collection(collName);
-        // query for collection that have a runtime less than 15 minutes
-        // const query = {};
-        // const options = {
-        //     // sort returned documents in ascending order by title (A->Z)
-        //     sort: {_id: -1},
-        //     // Include only the `title` and `imdb` fields in each returned document
-        //     projection: {_id: 1, roomName: 1, sensors: 1},
-        // };
         docs = await collection.find(query, options);
         docsArr = await docs.toArray()
         // print a message if no documents were found
         if ((await docs.count()) === 0) {
             console.log("No documents found!");
         }
-        // replace console.dir with your callback to access individual elements
-        // await docs.forEach(console.dir);
     } finally {
-        // console.log("Docs count: " + await docs.count());
-        // await client.close();
     }
 
     return docsArr

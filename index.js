@@ -1,6 +1,7 @@
 'use strict';
 const MongoClient = require('mongodb').MongoClient;
 const mongodbUtils = require('./utils/findMany.js');
+const config = require('./config/config.js');
 var path = require('path');
 var http = require('http');
 
@@ -47,7 +48,7 @@ async function initializeRoomsAndSensorsCollection(db, dbo) {
 }
 
 async function initializeMongodb() {
-    let url = "mongodb://mongo:27017";
+    let url = config.database_link;
     MongoClient.connect(url, { useUnifiedTopology: true },async function (err, db) {
         if (err) throw "1 \n" + err;
         console.log("Database connection created!");

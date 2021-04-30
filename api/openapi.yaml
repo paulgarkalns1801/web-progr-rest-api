@@ -130,6 +130,28 @@ paths:
         "400":
           description: Execution Error
       x-swagger-router-controller: Sensor
+    delete:
+      tags:
+        - Sensor
+      summary: Create/Update Sensor
+      description: Create or Update Sensor
+      operationId: sensorsDelete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorDelete'
+        required: true
+      responses:
+        "204":
+          description: Sensor created/updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorInfo'
+        "400":
+          description: Execution Error
+      x-swagger-router-controller: Sensor
     post:
       tags:
       - Sensor
@@ -323,12 +345,20 @@ components:
           id: d290f1ee-6c54-4b01-090e-d701748f0851
           value: "37"
         id: d290f1ee-6c54-4b01-090e-d701748f0851
+    SensorDelete:
+      type: object
+      properties:
+        roomId:
+          type: string
+          example: d290f1ee-6c54-4b01-090e-d701748f0851
+        sensorId:
+          type: string
+          example: d290f1ee-6c54-4b01-090e-d701748f0851
     SensorInput:
       type: object
       properties:
         roomId:
           type: string
-          format: uuid
           example: d290f1ee-6c54-4b01-090e-d701748f0851
         sensorType:
           type: string

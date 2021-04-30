@@ -64,3 +64,13 @@ module.exports.sensorsPUT = function sensorsPUT (req, res, next, body) {
       utils.writeJson(res, response);
     });
 };
+
+module.exports.sensorsDelete = function sensorsDelete (req, res, next, body) {
+    Sensor.sensorsDelete(body)
+        .then(function (response) {
+            utils.writeJson(res, response);
+        })
+        .catch(function (response) {
+            utils.writeJson(res, response);
+        });
+};
