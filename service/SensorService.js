@@ -105,32 +105,62 @@ exports.getSensors = function () {
 
 exports.getSensorValues = function (req) {
     return new Promise(async function (resolve, reject) {
+        let docs
         let queryParams = req.query
         let sensorsInRoom = []
         let sensorIdCustom
         let sensorIdString
-        if (queryParams.roomId !== undefined && queryParams.sensorId !== undefined && queryParams.dateTimeFrom !== undefined && queryParams.dateTimeTo !== undefined){
+        let sensorIds = []
+        let query
+        if (queryParams.roomId !== undefined && queryParams.sensorId !== undefined && queryParams.dateTimeFrom !== undefined && queryParams.dateTimeTo !== undefined) {
             sensorsInRoom = await getSensorsInRoom(queryParams.roomId)
 
-            for (let sensorObj of sensorsInRoom){
+            for (let sensorObj of sensorsInRoom) {
                 let a = ""
                 sensorIdString = sensorObj._id.toString()
-                if(queryParams.sensorId === sensorIdString){
+                if (queryParams.sensorId === sensorIdString) {
                     sensorIdCustom = sensorObj.sensorId
                 }
             }
+            query = {
+                dateTime: {
+                    $gte: new Date(queryParams.dateTimeFrom),
+                    $lte: new Date(queryParams.dateTimeTo)
+                },
+                sensorId: sensorIdCustom
+
+            }
+            docs = await findMany(query, {}, "sensorValueEntries").catch(console.dir);
         }
 
-        let query = {
-            dateTime: {
-                $gte: new Date(queryParams.dateTimeFrom),
-                $lte: new Date(queryParams.dateTimeTo)
-            },
-            sensorId: sensorIdCustom
+        if (queryParams.roomId !== undefined && queryParams.sensorType !== undefined && queryParams.dateTimeFrom !== undefined && queryParams.dateTimeTo !== undefined) {
+            sensorsInRoom = await getSensorsInRoom(queryParams.roomId)
+
+            for (let sensorObj of sensorsInRoom) {
+                let a = ""
+                let sensorType = sensorObj.sensorType
+                if (queryParams.sensorType === sensorType) {
+                    let foundSensorId = sensorObj.sensorId
+                    sensorIds = sensorIds.concat(foundSensorId)
+                }
+            }
+            query = {
+                dateTime: {
+                    $gte: new Date(queryParams.dateTimeFrom),
+                    $lte: new Date(queryParams.dateTimeTo)
+                },
+                sensorId: {
+                    $in: sensorIds
+                }
+
+            }
+            docs = await findMany(query, {}, "sensorValueEntries").catch(console.dir);
         }
+
+
 
         // let docs =  await findOne().catch(console.dir);
-        let docs = await findMany(query, {}, "sensorValueEntries").catch(console.dir);
+
         // let docArr = docs.toArray();
         // await docs.forEach(doc => docArr.push(doc));
         var examples = {};
