@@ -14,12 +14,12 @@
   "private": true,
   "dependencies": {
     "connect": "^3.2.0",
-    "mongoose": "^5.12.6",
     "nodemon": "^2.0.7",
     "oas3-tools": "^2.2.3"
   },
   "devDependencies": {
     "js-yaml": "^3.14.1",
-    "mongodb": "^3.6.6"
+    "mongodb": "^3.6.6",
+    "mongoose": "^5.12.6"
   }
 }

@@ -148,6 +148,57 @@ paths:
         "400":
           description: Execution Error
       x-swagger-router-controller: Sensor
+  /sensorValues:
+    get:
+      tags:
+        - Sensor
+      summary: Get sensor values
+      description: Returns a list of available sensors
+      operationId: getSensorValues
+      parameters:
+        - in: query
+          name: sensorId
+          description: mongodb sensorId
+          schema:
+            type: string
+        - in: query
+          name: roomId
+          description: mongodb roomId
+          schema:
+            type: string
+        - in: query
+          name: sensorType
+          description: sensor type
+          schema:
+            type: string
+        - in: query
+          name: dateTimeFrom
+          description: dateTimeFrom
+          schema:
+            type: string
+        - in: query
+          name: dateTimeTo
+          description: dateTimeTo
+          schema:
+            type: string
+        - in: query
+          name: detail
+          description: detail level (avaliable values - days, hours)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Sensors found successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SensorInfo'
+                x-content-type: application/json
+        "404":
+          description: Not found
+      x-swagger-router-controller: Sensor
   /sensors/{id}:
     get:
       tags:
