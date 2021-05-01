@@ -95,6 +95,12 @@ paths:
       summary: Get list of sensors
       description: Returns a list of available sensors
       operationId: getSensors
+      parameters:
+        - in: query
+          name: roomId
+          description: mongodb roomId
+          schema:
+            type: string
       responses:
         "200":
           description: Sensors found successfully
@@ -220,6 +226,29 @@ paths:
                 x-content-type: application/json
         "404":
           description: Not found
+      x-swagger-router-controller: Sensor
+  /sensors/warnings:
+    put:
+      tags:
+        - Sensor
+      summary: Create/Update sensor warnings
+      description: Create or Update Sensor Warnings
+      operationId: sensorsWarningsPUT
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorInput'
+        required: true
+      responses:
+        "204":
+          description: Sensor created/updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SensorInfo'
+        "400":
+          description: Execution Error
       x-swagger-router-controller: Sensor
   /sensors/{id}:
     get:

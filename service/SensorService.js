@@ -79,22 +79,34 @@ exports.getSensorValuesInRange = function (id, dateTime) {
  *
  * returns List
  **/
-exports.getSensors = function () {
+exports.getSensors = function (req) {
     return new Promise(async function (resolve, reject) {
-        // let docs =  await findOne().catch(console.dir);
-        const query = {};
-        const options = {
-            // sort returned documents in ascending order by title (A->Z)
-            sort: {_id: -1},
-            // Include only the `title` and `imdb` fields in each returned document
-            projection: {_id: 1, roomName: 1, sensors: 1},
-        };
+        let queryParams = req.query
+        let query = {}
+        let examples = {};
+        if (queryParams.roomId !== undefined) {
+            let roomIdMongoObj = new mongo.ObjectID(queryParams.roomId);
+            query = {_id: roomIdMongoObj};
 
-        let docs = await findMany(query, options, "roomsAndSensors").catch(console.dir);
-        // let docArr = docs.toArray();
-        // await docs.forEach(doc => docArr.push(doc));
-        var examples = {};
-        examples['application/json'] = docs;
+            const options = {
+                // sort returned documents in ascending order by title (A->Z)
+                sort: {_id: -1},
+                // Include only the `title` and `imdb` fields in each returned document
+                projection: {_id: 1, roomName: 1, sensors: 1},
+            };
+            let docs = await findOne("roomsAndSensors", query, options).catch(console.dir);
+            // let docArr = docs.toArray();
+            // await docs.forEach(doc => docArr.push(doc));
+            examples['application/json'] = docs;
+        } else {
+            const options = {
+                sort: {_id: -1},
+                projection: {_id: 1, roomName: 1, sensors: 1},
+            };
+
+            let docs = await findMany(query, options, "roomsAndSensors").catch(console.dir);
+            examples['application/json'] = docs;
+        }
         if (Object.keys(examples).length > 0) {
             resolve(examples[Object.keys(examples)[0]]);
         } else {
@@ -311,6 +323,61 @@ exports.sensorsPUT = function (body) {
     });
 }
 
+exports.sensorsWarningsPUT = function (body) {
+    return new Promise(async function (resolve, reject) {
+        let doc
+        let query = {}
+        let options = {}
+        let examples = {};
+        let exists = false
+        let update = {}
+        const RoomsAndSensorsInput = require('../models/RoomsAndSensorsInput.js');
+        const Sensor = require('../models/Sensor.js');
+        const Warning = require('../models/Warning.js');
+
+        if (body.roomId !== undefined && body.sensorId !== undefined) {
+            let roomIdMongoObj = new mongo.ObjectID(body.roomId);
+            let sensorIdMongoObj = new mongo.ObjectID(body.sensorId);
+            query = {
+                _id: roomIdMongoObj,
+                "sensors._id": sensorIdMongoObj
+            }
+            doc = await findOne("roomsAndSensors", query, options)
+            if (doc === null) {
+                examples['application/json'] = {"err": "Room or sensor not found"}
+                resolve(examples[Object.keys(examples)[0]])
+            }
+
+            if (doc !== null) {
+                let warningArr = []
+                for (let warning of body.warnings) {
+                    let newWarning = new Warning({
+                        warningText: warning.warningText,
+                        threshold: warning.threshold
+                    })
+                    warningArr = warningArr.concat(newWarning)
+                }
+                query = {
+                    "sensors._id": sensorIdMongoObj
+                }
+                update = {
+                    $set: {
+                        "sensors.$.warnings": warningArr
+                    }
+                }
+                doc = await updateOne("roomsAndSensors", query, update)
+                examples['application/json'] = {"data": doc}
+            }
+        }
+        if (Object.keys(examples).length > 0) {
+            resolve(examples[Object.keys(examples)[0]]);
+        } else {
+            examples['application/json'] = {"err": "Check request data"}
+            resolve();
+        }
+    });
+}
+
 exports.sensorsDelete = async function (body) {
     return new Promise(async function (resolve, reject) {
         let query = {}
@@ -344,7 +411,7 @@ exports.sensorsDelete = async function (body) {
                     examples['application/json'] = {"err": "No such sensor in room"}
                     resolve(examples[Object.keys(examples)[0]]);
                 }
-            } else{
+            } else {
                 examples['application/json'] = {"err": "No such room"}
             }
 

@@ -24,7 +24,7 @@ module.exports.getSensorValuesInRange = function getSensorValuesInRange (req, re
 };
 
 module.exports.getSensors = function getSensors (req, res, next) {
-  Sensor.getSensors()
+  Sensor.getSensors(req)
     .then(function (response) {
         console.log("Response: "+response)
       utils.writeJson(res, response);
@@ -63,6 +63,16 @@ module.exports.sensorsPUT = function sensorsPUT (req, res, next, body) {
     .catch(function (response) {
       utils.writeJson(res, response);
     });
+};
+
+module.exports.sensorsWarningsPUT = function sensorsWarningsPUT (req, res, next, body) {
+    Sensor.sensorsWarningsPUT(body)
+        .then(function (response) {
+            utils.writeJson(res, response);
+        })
+        .catch(function (response) {
+            utils.writeJson(res, response);
+        });
 };
 
 module.exports.sensorsDelete = function sensorsDelete (req, res, next, body) {
