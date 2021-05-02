@@ -34,6 +34,17 @@ module.exports.getSensors = function getSensors (req, res, next) {
     });
 };
 
+module.exports.getWarnings = function getWarnings (req, res, next) {
+    Sensor.getWarnings(req)
+        .then(function (response) {
+            console.log("Response: "+response)
+            utils.writeJson(res, response);
+        })
+        .catch(function (response) {
+            utils.writeJson(res, response);
+        });
+};
+
 module.exports.getSensorValues = function getSensors (req, res, next) {
     Sensor.getSensorValues(req)
         .then(function (response) {

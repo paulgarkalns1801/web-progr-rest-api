@@ -184,6 +184,162 @@ exports.getSensorValues = function (req) {
     });
 }
 
+exports.getWarnings = function (req) {
+    return new Promise(async function (resolve, reject) {
+        let doc
+        let docs
+        let queryParams = req.query
+        let sensorsInRoom = []
+        let sensorIdCustom
+        let sensorIdString
+        let sensorIds = []
+        let examples = {}
+        let query = {}
+        let err = false
+        let subQuery
+        let sensorsWithWarnings = []
+        let sensorValuesWithWarnings = []
+        let subDocs
+        // query = {
+        //     dateTime: {
+        //         $gte: new Date(queryParams.dateTimeFrom),
+        //         $lte: new Date(queryParams.dateTimeTo)
+        //     },
+        if (queryParams.dateTimeFrom !== undefined || queryParams.dateTimeTo !== undefined) {
+            query.dateTime = {}
+        }
+        if (queryParams.dateTimeFrom !== undefined) {
+            query.dateTime.$gte = new Date(queryParams.dateTimeFrom)
+        }
+        if (queryParams.dateTimeTo !== undefined) {
+            query.dateTime.$lte = new Date(queryParams.dateTimeTo)
+        }
+
+        if (queryParams.sensorId !== undefined && queryParams.roomId === undefined) {
+            let sensorIdMongoObj = new mongo.ObjectID(queryParams.sensorId);
+
+            subQuery = {"sensors._id": sensorIdMongoObj}
+            doc = await findOne("roomsAndSensors", subQuery, {})
+            if (doc !== null) {
+                let sensorId
+                for (let sensor of doc.sensors) {
+                    sensorIdString = sensor._id.toString()
+                    if (sensorIdString === queryParams.sensorId) {
+                        sensorId = sensor.sensorId
+                    }
+                }
+                sensorIds = sensorIds.concat(sensorId)
+            } else {
+                examples['application/json'] = {"err": "sensor not found"};
+                resolve(examples[Object.keys(examples)[0]])
+                err = true
+            }
+
+            query.sensorId = {}
+            query.sensorId.$in = sensorIds
+            // query.sensorId = {}
+            // query.sensorId.$in = sensorIds
+        }
+        if (queryParams.sensorId === undefined && queryParams.roomId !== undefined) {
+            let roomIdMongoObj = new mongo.ObjectID(queryParams.roomId);
+
+            subQuery = {_id: roomIdMongoObj}
+            doc = await findOne("roomsAndSensors", subQuery, {})
+            if (doc !== null) {
+                let sensorId
+                for (let sensor of doc.sensors) {
+                    sensorIds = sensorIds.concat(sensor.sensorId)
+                }
+
+            } else {
+                examples['application/json'] = {"err": "sensor not found"};
+                resolve(examples[Object.keys(examples)[0]])
+                err = true
+            }
+
+            query.sensorId = {}
+            query.sensorId.$in = sensorIds
+            // query.sensorId = {}
+            // query.sensorId.$in = sensorIds
+        }
+
+        docs = await findMany(query, {}, "sensorValueEntries").catch(console.dir);
+
+        if (doc !== null && doc !== undefined) {
+            for (let sensor of doc.sensors) {
+                if (sensor.warnings !== null && sensor.warnings !== undefined) {
+                    if (sensor.warnings.length > 0) {
+                        sensorsWithWarnings = sensorsWithWarnings.concat(sensor)
+                    }
+                }
+            }
+        } else {
+            subDocs = await findMany({}, {}, "roomsAndSensors").catch(console.dir);
+            if (subDocs !== null && subDocs !== undefined) {
+                for (let doc of subDocs) {
+                    for (let sensor of doc.sensors) {
+                        if (sensor.warnings !== null && sensor.warnings !== undefined) {
+                            if (sensor.warnings.length > 0) {
+                                sensorsWithWarnings = sensorsWithWarnings.concat(sensor)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (docs !== null && docs !== undefined && sensorsWithWarnings.length > 0) {
+            for (let sensor of sensorsWithWarnings) {
+                for (let sensorWarning of sensor.warnings) {
+                    let threshold = sensorWarning.threshold.split(" ")
+                    let sensorValueValue
+                    let thresholdValue
+                    if (threshold[0] === ">") {
+                        for (let sensorValue of docs) {
+                            if (sensorValue.sensorId === sensor.sensorId) {
+                                sensorValueValue = parseFloat(sensorValue.value)
+                                thresholdValue = parseFloat(threshold[1])
+
+
+                                if (sensorValueValue > thresholdValue) {
+                                    sensorValuesWithWarnings = sensorValuesWithWarnings.concat({
+                                        sensorValue,
+                                        sensorWarning
+                                    })
+                                }
+                            }
+                        }
+                    }
+                    if (threshold[0] === "<") {
+                        for (let sensorValue of docs) {
+                            if (sensorValue.sensorId === sensor.sensorId) {
+                                sensorValueValue = parseFloat(sensorValue.value)
+                                thresholdValue = parseFloat(threshold[1])
+                                if (sensorValueValue < thresholdValue) {
+                                    sensorValuesWithWarnings = sensorValuesWithWarnings.concat({
+                                        sensorValue,
+                                        sensorWarning
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!err) {
+            examples['application/json'] = sensorValuesWithWarnings;
+        }
+
+        if (Object.keys(examples).length > 0) {
+            resolve(examples[Object.keys(examples)[0]]);
+        } else {
+            resolve();
+        }
+    });
+}
+
 /**
  * Add sensor value to database
  * Create or Update Sensor
