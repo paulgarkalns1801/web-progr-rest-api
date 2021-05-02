@@ -7,87 +7,7 @@ servers:
   description: SwaggerHub API Auto Mocking
 - url: (http://localhost:8080
   description: Live API Endpoint
-tags:
-- name: Room
 paths:
-  /rooms:
-    get:
-      tags:
-      - Room
-      summary: Get list of rooms
-      description: Returns a list of available rooms
-      operationId: getRooms
-      responses:
-        "200":
-          description: Rooms found successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Room'
-                x-content-type: application/json
-        "404":
-          description: Not found
-      x-swagger-router-controller: Room
-    put:
-      tags:
-      - Room
-      summary: Create/Update Room
-      description: Create or Update Room
-      operationId: roomsPUT
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/roomInput'
-        required: true
-      responses:
-        "204":
-          description: Room created/updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Room'
-        "400":
-          description: Execution Error
-      x-swagger-router-controller: Room
-  /rooms/{name}:
-    get:
-      tags:
-      - Room
-      summary: Get room by name
-      description: Returns a room instance by name
-      operationId: getRoomByName
-      parameters:
-      - name: name
-        in: path
-        description: Room name
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Room found successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Room'
-        "404":
-          description: Room not found for provided name
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RestError'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RestError'
-      x-swagger-router-controller: Room
   /sensors:
     get:
       tags:
@@ -109,32 +29,32 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SensorInfo'
+                  $ref: '#/components/schemas/Room'
                 x-content-type: application/json
-        "404":
-          description: Not found
+#        "404":
+#          description: Not found
       x-swagger-router-controller: Sensor
     put:
       tags:
       - Sensor
-      summary: Create/Update Sensor
-      description: Create or Update Sensor
+      summary: Create/Update Room data
+      description: Create or Update Room data (room name, sensors). pass roomId to update existing room, or dont and create new room. Dont pass warnings. Warnings will be reset
       operationId: sensorsPUT
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SensorInput'
+              $ref: '#/components/schemas/RoomInput'
         required: true
       responses:
-        "204":
+        "200":
           description: Sensor created/updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SensorInfo'
-        "400":
-          description: Execution Error
+                $ref: '#/components/schemas/Room'
+#        "400":
+#          description: Execution Error
       x-swagger-router-controller: Sensor
     delete:
       tags:
@@ -154,9 +74,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SensorInfo'
-        "400":
-          description: Execution Error
+                $ref: '#/components/schemas/Sensor'
+#        "400":
+#          description: Execution Error
       x-swagger-router-controller: Sensor
     post:
       tags:
@@ -173,8 +93,8 @@ paths:
       responses:
         "200":
           description: Value added successfully
-        "400":
-          description: Execution Error
+#        "400":
+#          description: Execution Error
       x-swagger-router-controller: Sensor
   /sensorValues:
     get:
@@ -222,10 +142,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SensorInfo'
+                  $ref: '#/components/schemas/Sensor'
                 x-content-type: application/json
-        "404":
-          description: Not found
+#        "404":
+#          description: Not found
       x-swagger-router-controller: Sensor
   /sensors/warnings:
     put:
@@ -246,9 +166,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SensorInfo'
-        "400":
-          description: Execution Error
+                $ref: '#/components/schemas/Sensor'
+#        "400":
+#          description: Execution Error
       x-swagger-router-controller: Sensor
     get:
       tags:
@@ -257,11 +177,6 @@ paths:
       description: Returns a list of values with warnings
       operationId: getWarnings
       parameters:
-        - in: query
-          name: warningId
-          description: mongodb warningId
-          schema:
-            type: string
         - in: query
           name: sensorId
           description: mongodb sensorId
@@ -295,90 +210,10 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/SensorInfo'
+                  $ref: '#/components/schemas/Sensor'
                 x-content-type: application/json
-        "404":
-          description: Not found
-      x-swagger-router-controller: Sensor
-  /sensors/{id}:
-    get:
-      tags:
-      - Sensor
-      summary: Get Sensor by id
-      description: Returns a sensor found by unique id
-      operationId: getSensorById
-      parameters:
-      - name: id
-        in: path
-        description: Sensor id
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Sensor found successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Sensor'
-        "404":
-          description: Sensor not found for provided id
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RestError'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RestError'
-      x-swagger-router-controller: Sensor
-  /sensors/{id}/dateTimeFrom/{dateTime}/dateTimeTo/{dateTime}:
-    get:
-      tags:
-      - Sensor
-      summary: Get room by name
-      description: Returns a room instance by name
-      operationId: getSensorValuesInRange
-      parameters:
-      - name: id
-        in: path
-        description: Sensor id
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      - name: dateTime
-        in: path
-        description: Zulu date and time
-        required: true
-        style: simple
-        explode: false
-        schema:
-          type: string
-      responses:
-        "200":
-          description: Sensor found successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Sensor'
-        "404":
-          description: Room not found for provided name
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RestError'
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RestError'
+#        "404":
+#          description: Not found
       x-swagger-router-controller: Sensor
 components:
   schemas:
@@ -404,26 +239,46 @@ components:
         dateTime: 1461110400000
         id: d290f1ee-6c54-4b01-090e-d701748f0851
         value: "37"
+    Warning:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 608bf4f96ef769681c7e3526
+        warningText:
+          type: string
+          example: Oh my! That's unexpected. Too cold </3
+        threshold:
+          type: string
+          example: < 5
+      example:
+       _id: "608bf4f96ef769681c7e3526"
+       warningText: "Oh my! That's unexpected. Too hot <?3"
+       threshold: "> 30"
     Sensor:
       type: object
       properties:
-        id:
+        _id:
           type: string
-          format: uuid
-          example: d290f1ee-6c54-4b01-090e-d701748f0851
-        records:
+          example: 608bf4f96ef769681c7e3526
+        sensorType:
+          type: string
+          example: temperatureSensor
+        sensorId:
+          type: string
+          example: 207
+        warnings:
           type: array
           items:
-            $ref: '#/components/schemas/Record'
+            $ref: '#/components/schemas/Warning'
       example:
-        records:
-        - dateTime: 1461110400000
-          id: d290f1ee-6c54-4b01-090e-d701748f0851
-          value: "37"
-        - dateTime: 1461110400000
-          id: d290f1ee-6c54-4b01-090e-d701748f0851
-          value: "37"
-        id: d290f1ee-6c54-4b01-090e-d701748f0851
+        _id: "608bf4f96ef769681c7e3526"
+        sensorType: "temperatureSensor"
+        sensorId: "207"
+        warnings:
+          _id: "608bf4f96ef769681c7e3526"
+          warningText: "Oh my! That's unexpected. Too hot <?3"
+          threshold: "> 30"
     SensorDelete:
       type: object
       properties:
@@ -436,12 +291,15 @@ components:
     SensorInput:
       type: object
       properties:
-        roomId:
-          type: string
-          example: d290f1ee-6c54-4b01-090e-d701748f0851
         sensorType:
           type: string
           example: temperatureSensor
+        sensorId:
+          type: string
+          example: 207
+      example:
+        sensorType: "temperatureSensor"
+        sensorId: "207"
     SensorValueInput:
       type: object
       properties:
@@ -460,67 +318,83 @@ components:
         roomName:
           type: string
           example: POIC_1
-    SensorInfo:
+    RoomInfo:
       type: object
       properties:
-        id:
+        _id:
           type: string
-          format: uuid
-          example: d290f1ee-6c54-4b01-090e-d701748f0851
-        sensorType:
+          example: 608bb84fcbbf2d6368944395
+        roomName:
           type: string
-          example: temperatureSensor
+          example: POIC_8
+        sensors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sensor'
       example:
         sensorType: temperatureSensor
         id: d290f1ee-6c54-4b01-090e-d701748f0851
     Room:
       type: object
       properties:
-        id:
+        _id:
           type: string
-          format: uuid
-          example: d290f1ee-6c54-4b01-090e-d701748f0851
-        name:
+          example: 608bf4f96ef769681c7e3524
+        roomName:
           type: string
           example: POS_1
-        temperatureSensors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Sensor'
-        humiditySensors:
-          type: array
-          items:
-            $ref: '#/components/schemas/Sensor'
-        carbonDioxideSensors:
+        sensors:
           type: array
           items:
             $ref: '#/components/schemas/Sensor'
       example:
-        temperatureSensors:
-        - records:
-          - dateTime: 1461110400000
-            id: d290f1ee-6c54-4b01-090e-d701748f0851
-            value: "37"
-          - dateTime: 1461110400000
-            id: d290f1ee-6c54-4b01-090e-d701748f0851
-            value: "37"
-          id: d290f1ee-6c54-4b01-090e-d701748f0851
-        - records:
-          - dateTime: 1461110400000
-            id: d290f1ee-6c54-4b01-090e-d701748f0851
-            value: "37"
-          - dateTime: 1461110400000
-            id: d290f1ee-6c54-4b01-090e-d701748f0851
-            value: "37"
-          id: d290f1ee-6c54-4b01-090e-d701748f0851
-        carbonDioxideSensors:
-        - null
-        - null
-        name: POS_1
-        humiditySensors:
-        - null
-        - null
-        id: d290f1ee-6c54-4b01-090e-d701748f0851
+        _id: "608bf4f96ef769681c7e3524"
+        roomName: "POS_1"
+        sensors:
+          - _id: "608bf4f96ef769681c7e3526"
+            sensorType: "temperatureSensor"
+            sensorId: "207"
+            warnings:
+              - _id: "608bf4f96ef769681c7e3526"
+                warningText: "Oh my! That's unexpected. Too hot <?3"
+                threshold: "> 30"
+          - _id: "608bf4f96ef769681c7e3526"
+            sensorType: "temperatureSensor"
+            sensorId: "207"
+            warnings:
+              - _id: "608bf4f96ef769681c7e3526"
+                warningText: "Oh my! That's unexpected. Too hot <?3"
+                threshold: "> 30"
+          - _id: "608bf4f96ef769681c7e3526"
+            sensorType: "temperatureSensor"
+            sensorId: "207"
+            warnings:
+              - _id: "608bf4f96ef769681c7e3526"
+                warningText: "Oh my! That's unexpected. Too hot <?3"
+                threshold: "> 30"
+    RoomInput:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 608bf4f96ef769681c7e3524
+        roomName:
+          type: string
+          example: POS_1
+        sensors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SensorInput'
+      example:
+        _id: "608bf4f96ef769681c7e3524"
+        roomName: "POS_1"
+        sensors:
+          - sensorType: "temperatureSensor"
+            sensorId: "207"
+          - sensorType: "temperatureSensor"
+            sensorId: "207"
+          - sensorType: "temperatureSensor"
+            sensorId: "207"
     RestError:
       type: object
       properties:
