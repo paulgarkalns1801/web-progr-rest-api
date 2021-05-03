@@ -9,70 +9,6 @@ let url = config.database_link;
 const uri = config.database_link;
 const client = new MongoClient(uri);
 
-
-/**
- * Get Sensor by id
- * Returns a sensor found by unique id
- *
- * id String Sensor id
- * returns Sensor
- **/
-exports.getSensorById = function (id) {
-    return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "records": [{
-                "dateTime": 1461110400000,
-                "id": "d290f1ee-6c54-4b01-090e-d701748f0851",
-                "value": "37"
-            }, {
-                "dateTime": 1461110400000,
-                "id": "d290f1ee-6c54-4b01-090e-d701748f0851",
-                "value": "37"
-            }],
-            "id": "d290f1ee-6c54-4b01-090e-d701748f0851"
-        };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
-        }
-    });
-}
-
-
-/**
- * Get room by name
- * Returns a room instance by name
- *
- * id String Sensor id
- * dateTime String Zulu date and time
- * returns Sensor
- **/
-exports.getSensorValuesInRange = function (id, dateTime) {
-    return new Promise(function (resolve, reject) {
-        var examples = {};
-        examples['application/json'] = {
-            "records": [{
-                "dateTime": 1461110400000,
-                "id": "d290f1ee-6c54-4b01-090e-d701748f0851",
-                "value": "37"
-            }, {
-                "dateTime": 1461110400000,
-                "id": "d290f1ee-6c54-4b01-090e-d701748f0851",
-                "value": "37"
-            }],
-            "id": "d290f1ee-6c54-4b01-090e-d701748f0851"
-        };
-        if (Object.keys(examples).length > 0) {
-            resolve(examples[Object.keys(examples)[0]]);
-        } else {
-            resolve();
-        }
-    });
-}
-
-
 /**
  * Get list of sensors
  * Returns a list of available sensors
@@ -169,11 +105,6 @@ exports.getSensorValues = function (req) {
             docs = await findMany(query, {}, "sensorValueEntries").catch(console.dir);
         }
 
-
-        // let docs =  await findOne().catch(console.dir);
-
-        // let docArr = docs.toArray();
-        // await docs.forEach(doc => docArr.push(doc));
         var examples = {};
         examples['application/json'] = docs;
         if (Object.keys(examples).length > 0) {
@@ -200,11 +131,7 @@ exports.getWarnings = function (req) {
         let sensorsWithWarnings = []
         let sensorValuesWithWarnings = []
         let subDocs
-        // query = {
-        //     dateTime: {
-        //         $gte: new Date(queryParams.dateTimeFrom),
-        //         $lte: new Date(queryParams.dateTimeTo)
-        //     },
+
         if (queryParams.dateTimeFrom !== undefined || queryParams.dateTimeTo !== undefined) {
             query.dateTime = {}
         }

@@ -3,26 +3,6 @@
 var utils = require('../utils/writer.js');
 var Sensor = require('../service/SensorService');
 
-module.exports.getSensorById = function getSensorById (req, res, next, id) {
-  Sensor.getSensorById(id)
-    .then(function (response) {
-      utils.writeJson(res, response);
-    })
-    .catch(function (response) {
-      utils.writeJson(res, response);
-    });
-};
-
-module.exports.getSensorValuesInRange = function getSensorValuesInRange (req, res, next, id, dateTime) {
-  Sensor.getSensorValuesInRange(id, dateTime)
-    .then(function (response) {
-      utils.writeJson(res, response);
-    })
-    .catch(function (response) {
-      utils.writeJson(res, response);
-    });
-};
-
 module.exports.getSensors = function getSensors (req, res, next) {
   Sensor.getSensors(req)
     .then(function (response) {

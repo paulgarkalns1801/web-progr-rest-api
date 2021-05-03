@@ -13,7 +13,7 @@ paths:
       tags:
       - Sensor
       summary: Get list of sensors
-      description: Returns a list of available sensors
+      description: Returns a list of available sensors. Pass roomId to get one room
       operationId: getSensors
       parameters:
         - in: query
@@ -59,8 +59,8 @@ paths:
     delete:
       tags:
         - Sensor
-      summary: Create/Update Sensor
-      description: Create or Update Sensor
+      summary: Delete room/sensor
+      description: Delete room/sensor. To delete room, pass roomId. To delete sensor from room, pass roomId and sensorId
       operationId: sensorsDelete
       requestBody:
         content:
@@ -70,7 +70,7 @@ paths:
         required: true
       responses:
         "204":
-          description: Sensor created/updated successfully
+          description: Room/sensor deleted successfully
           content:
             application/json:
               schema:
@@ -81,8 +81,8 @@ paths:
     post:
       tags:
       - Sensor
-      summary: Add sensor value to database
-      description: Create or Update Sensor
+      summary: Add sensor value to database sensorValueEntries
+      description: Adds sensor value to database sensorValueEntries
       operationId: sensorsPOST
       requestBody:
         content:
@@ -101,7 +101,7 @@ paths:
       tags:
         - Sensor
       summary: Get sensor values
-      description: Returns a list of available sensors
+      description: Returns an array of sensor values according to filter
       operationId: getSensorValues
       parameters:
         - in: query
@@ -142,7 +142,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Sensor'
+                  $ref: '#/components/schemas/Record'
                 x-content-type: application/json
 #        "404":
 #          description: Not found
@@ -152,21 +152,21 @@ paths:
       tags:
         - Sensor
       summary: Create/Update sensor warnings
-      description: Create or Update Sensor Warnings
+      description: Create or Update Sensor Warnings.
       operationId: sensorsWarningsPUT
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SensorInput'
+              $ref: '#/components/schemas/WarningInput'
         required: true
       responses:
-        "204":
-          description: Sensor created/updated successfully
+        "200":
+          description: Warning created/updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Sensor'
+                $ref: '#/components/schemas/Room'
 #        "400":
 #          description: Execution Error
       x-swagger-router-controller: Sensor
@@ -210,7 +210,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Sensor'
+                  $ref: '#/components/schemas/SensorValuesWithWarnings'
                 x-content-type: application/json
 #        "404":
 #          description: Not found
@@ -224,14 +224,15 @@ components:
       - value
       type: object
       properties:
-        id:
+        _id:
           type: string
-          format: uuid
-          example: d290f1ee-6c54-4b01-090e-d701748f0851
+          example: 60853c647960bc20b0cb5da2
+        sensorId:
+          type: string
+          example: 1010
         dateTime:
-          type: integer
-          format: int64
-          example: 1461110400000
+          type: string
+          example: "2020-01-16T09:08:55.000Z"
         value:
           type: string
           example: "37"
@@ -239,6 +240,35 @@ components:
         dateTime: 1461110400000
         id: d290f1ee-6c54-4b01-090e-d701748f0851
         value: "37"
+    SensorValuesWithWarnings:
+      type: object
+      properties:
+        sensorValue:
+          type: object
+          properties:
+            _id:
+              type: string
+              example: 60853c647960bc20b0cb5da2
+            sensorId:
+              type: string
+              example: 1010
+            dateTime:
+              type: string
+              example: "2020-01-16T09:08:55.000Z"
+            value:
+              type: string
+              example: "37"
+        sensorWarnings:
+          properties:
+            _id:
+              type: string
+              example: 608bf4f96ef769681c7e3526
+            warningText:
+              type: string
+              example: Oh my! That's unexpected. Too cold </3
+            threshold:
+              type: string
+              example: < 5
     Warning:
       type: object
       properties:
@@ -255,6 +285,29 @@ components:
        _id: "608bf4f96ef769681c7e3526"
        warningText: "Oh my! That's unexpected. Too hot <?3"
        threshold: "> 30"
+    WarningInput:
+      type: object
+      properties:
+        roomId:
+          type: string
+          example: 608bb84fcbbf2d6368944395
+        sensorId:
+          type: string
+          example: 608bb84fcbbf2d6368944395
+        warningText:
+          type: string
+          example: Oh my! That's unexpected. Too cold </3
+        threshold:
+          type: string
+          example: < 5
+      example:
+        roomId: "608bf4f96ef769681c7e3526"
+        sensorId: "608bf4f96ef769681c7e3526"
+        warnings:
+          - warningText: "Oh my! That's unexpected. Too hot <?3"
+            threshold: "> 30"
+          - warningText: "Oh my! That's unexpected. Too cold </3"
+            threshold: "< 17"
     Sensor:
       type: object
       properties:
@@ -305,13 +358,13 @@ components:
       properties:
         value:
           type: string
-          example: d290f1ee-6c54-4b01-090e-d701748f0851
+          example: 30
         sensorId:
           type: string
           example: "100"
         dateTime:
           type: string
-          example: "{}"
+          example: "2020-01-16T09:08:55.000Z"
     roomInput:
       type: object
       properties:
